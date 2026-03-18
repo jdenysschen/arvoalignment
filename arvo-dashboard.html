@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARVO — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue:       #1d7d7d;
+  --blue-dark:  #165f5f;
+  --blue-mid:   #236e6e;
+  --peach:      #f5b896;
+  --peach-dark: #e8996f;
+  --cream:      #fdf6ef;
+  --text-sub:   rgba(245,184,150,0.65);
+  --border:     rgba(245,184,150,0.2);
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Nunito Sans', sans-serif;
+  background: var(--blue);
+  color: var(--peach);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* NAV */
+.nav {
+  background: var(--cream); padding: 0 48px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.nav-logo { font-size: 18px; font-weight: 700; letter-spacing: 0.22em; color: var(--blue); text-transform: uppercase; }
+.nav-logo .sub { font-weight: 300; font-size: 11px; color: #999; margin-left: 6px; letter-spacing: 0.12em; text-transform: lowercase; }
+.nav-right { display: flex; align-items: center; gap: 20px; }
+.nav-meta { font-size: 11px; color: #aaa; letter-spacing: 0.1em; }
+.nav-btn {
+  background: transparent; color: var(--blue); border: 1.5px solid var(--blue);
+  padding: 8px 18px; border-radius: 4px; font-family: 'Nunito Sans', sans-serif;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.08em; cursor: pointer; transition: all 0.2s;
+}
+.nav-btn:hover { background: var(--blue); color: var(--cream); }
+
+/* LOGIN */
+#login-view {
+  display: flex; flex-direction: column; min-height: 100vh;
+}
+.login-body {
+  flex: 1; display: flex; align-items: center; justify-content: center; padding: 48px 24px;
+}
+.login-card {
+  background: var(--blue-mid); border: 1px solid var(--border); border-radius: 12px;
+  padding: 52px 48px; width: 100%; max-width: 400px; text-align: center;
+}
+.login-logo { font-size: 36px; font-weight: 700; letter-spacing: 0.2em; color: var(--peach); text-transform: uppercase; margin-bottom: 4px; }
+.login-tag { font-size: 11px; color: var(--text-sub); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 40px; }
+.login-fields { display: flex; flex-direction: column; gap: 14px; margin-bottom: 10px; }
+.login-fields input {
+  width: 100%; background: var(--blue-dark); border: 1px solid var(--border); border-radius: 6px;
+  padding: 14px 18px; font-family: 'Nunito Sans', sans-serif; font-size: 15px;
+  color: var(--peach); outline: none; transition: border-color 0.2s;
+}
+.login-fields input:focus { border-color: rgba(245,184,150,0.5); }
+.login-fields input::placeholder { color: var(--text-sub); }
+.login-error { font-size: 12px; color: #f5a0a0; margin: 10px 0 16px; display: none; }
+.login-btn {
+  width: 100%; background: var(--peach); color: var(--blue); border: none; border-radius: 6px;
+  padding: 14px; font-family: 'Nunito Sans', sans-serif; font-size: 13px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; margin-top: 8px;
+}
+.login-btn:hover { background: var(--peach-dark); }
+
+/* DASHBOARD */
+#dash-view { display: none; flex-direction: column; min-height: 100vh; }
+
+.tabs-bar {
+  background: var(--blue-mid); border-bottom: 1px solid var(--border);
+  padding: 0 48px; display: flex;
+}
+.tab {
+  padding: 16px 0; margin-right: 40px; border: none; background: none;
+  font-family: 'Nunito Sans', sans-serif; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-sub);
+  cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; margin-bottom: -1px;
+}
+.tab.active { color: var(--peach); border-bottom-color: var(--peach); }
+
+.dash-body { padding: 48px; }
+
+/* Stats */
+.stats-row {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 14px; margin-bottom: 48px;
+}
+.stat-card {
+  background: var(--blue-mid); border: 1px solid var(--border);
+  border-radius: 8px; padding: 28px 24px;
+}
+.stat-num { font-size: 44px; font-weight: 700; color: var(--peach); line-height: 1; margin-bottom: 6px; }
+.stat-label { font-size: 10px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-sub); }
+
+/* Trend insight bar */
+.insight-bar {
+  background: var(--blue-mid); border: 1px solid var(--border); border-radius: 8px;
+  padding: 20px 28px; margin-bottom: 32px; display: flex; align-items: center; gap: 16px;
+}
+.insight-icon { font-size: 20px; }
+.insight-text { font-size: 13px; color: var(--text-sub); line-height: 1.5; }
+.insight-text strong { color: var(--peach); font-weight: 600; }
+
+.section-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.25em;
+  text-transform: uppercase; color: var(--text-sub); margin-bottom: 16px;
+}
+
+/* Table */
+.data-table {
+  background: var(--blue-mid); border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden;
+}
+.t-head {
+  display: grid; padding: 14px 24px;
+  background: rgba(0,0,0,0.15); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-sub);
+  gap: 16px; border-bottom: 1px solid var(--border);
+}
+.t-row {
+  display: grid; padding: 18px 24px; gap: 16px; align-items: center;
+  border-bottom: 1px solid var(--border); cursor: pointer;
+  transition: background 0.12s; font-size: 13px;
+}
+.t-row:last-child { border-bottom: none; }
+.t-row:hover { background: rgba(0,0,0,0.1); }
+
+.cand-cols { grid-template-columns: 1.4fr 1.3fr 1fr 1fr 1fr 80px; }
+.client-cols { grid-template-columns: 1.4fr 1.3fr 0.8fr 1.5fr 80px; }
+
+.r-name { font-weight: 700; color: var(--peach); }
+.r-muted { color: var(--text-sub); font-size: 13px; }
+
+.pill {
+  display: inline-block; padding: 3px 10px; border-radius: 20px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.pill-active  { background: rgba(100,220,160,0.15); color: #6ddba0; }
+.pill-open    { background: rgba(245,184,150,0.15); color: var(--peach); }
+.pill-passive { background: rgba(245,184,150,0.07); color: var(--text-sub); }
+.pill-hot     { background: rgba(245,150,100,0.2);  color: #f5966e; }
+
+.row-btn {
+  padding: 7px 14px; border-radius: 4px; background: transparent;
+  border: 1px solid var(--border); font-family: 'Nunito Sans', sans-serif;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-sub); cursor: pointer; transition: all 0.15s;
+}
+.row-btn:hover { border-color: var(--peach); color: var(--peach); }
+.empty-state { padding: 72px 24px; text-align: center; color: var(--text-sub); font-size: 13px; font-weight: 300; }
+
+/* DRAWER */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(10,50,50,0.65); z-index: 200; justify-content: flex-end; }
+.overlay.open { display: flex; }
+.drawer {
+  background: var(--blue-dark); border-left: 1px solid var(--border);
+  width: 100%; max-width: 540px; height: 100vh; overflow-y: auto;
+  padding: 48px; position: relative; animation: slideIn 0.3s cubic-bezier(.4,0,.2,1);
+}
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+.drawer-close {
+  position: absolute; top: 20px; right: 20px; background: none;
+  border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  padding: 6px 12px; font-size: 10px; font-weight: 600; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--text-sub); font-family: 'Nunito Sans', sans-serif;
+  transition: all 0.15s;
+}
+.drawer-close:hover { border-color: var(--peach); color: var(--peach); }
+.drawer-type { font-size: 10px; font-weight: 600; letter-spacing: 0.28em; text-transform: uppercase; color: var(--text-sub); margin-bottom: 8px; }
+.drawer-name { font-size: 38px; font-weight: 700; color: var(--peach); letter-spacing: 0.02em; line-height: 1; margin-bottom: 6px; }
+.drawer-date { font-size: 12px; color: var(--text-sub); font-weight: 300; margin-bottom: 32px; }
+.drawer-rule { height: 1px; background: var(--border); margin-bottom: 32px; }
+.qa-list { display: flex; flex-direction: column; gap: 28px; }
+.qa-q { font-size: 10px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-sub); margin-bottom: 7px; }
+.qa-a { font-size: 15px; font-weight: 400; color: var(--peach); line-height: 1.7; }
+
+/* Export button */
+.export-btn {
+  background: transparent; border: 1px solid var(--border); border-radius: 4px;
+  padding: 8px 18px; font-family: 'Nunito Sans', sans-serif; font-size: 11px;
+  font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-sub); cursor: pointer; transition: all 0.2s; float: right; margin-bottom: 16px;
+}
+.export-btn:hover { border-color: var(--peach); color: var(--peach); }
+
+@media (max-width: 900px) {
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .nav, .tabs-bar, .dash-body { padding-left: 20px; padding-right: 20px; }
+  .drawer { max-width: 100%; padding: 32px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-view">
+  <nav class="nav">
+    <div class="nav-logo">ARVO <span class="sub">dashboard</span></div>
+  </nav>
+  <div class="login-body">
+    <div class="login-card">
+      <div class="login-logo">ARVO</div>
+      <div class="login-tag">Team Dashboard</div>
+      <div class="login-fields">
+        <input type="text" id="lu" placeholder="Username" />
+        <input type="password" id="lp" placeholder="Password" onkeydown="if(event.key==='Enter')login()" />
+      </div>
+      <div class="login-error" id="lerr">Incorrect credentials — try again.</div>
+      <button class="login-btn" onclick="login()">Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dash-view">
+  <nav class="nav">
+    <div class="nav-logo">ARVO <span class="sub">dashboard</span></div>
+    <div class="nav-right">
+      <span class="nav-meta" id="dash-date"></span>
+      <button class="nav-btn" onclick="logout()">Sign Out</button>
+    </div>
+  </nav>
+
+  <div class="tabs-bar">
+    <button class="tab active" onclick="switchTab('candidates', this)">Candidates</button>
+    <button class="tab" onclick="switchTab('clients', this)">Clients</button>
+  </div>
+
+  <div class="dash-body">
+    <!-- CANDIDATES TAB -->
+    <div id="tab-candidates">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-num" id="c-total">0</div><div class="stat-label">Total responses</div></div>
+        <div class="stat-card"><div class="stat-num" id="c-active">0</div><div class="stat-label">Active / ready</div></div>
+        <div class="stat-card"><div class="stat-num" id="c-motive" style="font-size:22px;padding-top:12px;line-height:1.2;">—</div><div class="stat-label">Top move driver</div></div>
+        <div class="stat-card"><div class="stat-num" id="c-notice">—</div><div class="stat-label">Common notice</div></div>
+      </div>
+      <div id="c-insight" class="insight-bar" style="display:none;">
+        <div class="insight-icon">📊</div>
+        <div class="insight-text" id="c-insight-text"></div>
+      </div>
+      <div style="overflow:hidden;">
+        <button class="export-btn" onclick="exportCSV('candidates')">Export CSV ↓</button>
+        <div class="section-label">All candidate responses</div>
+      </div>
+      <div class="data-table">
+        <div class="t-head cand-cols">
+          <span>Name</span><span>Target role</span><span>Readiness</span><span>Move driver</span><span>Notice</span><span></span>
+        </div>
+        <div id="c-rows"></div>
+      </div>
+    </div>
+
+    <!-- CLIENTS TAB -->
+    <div id="tab-clients" style="display:none;">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-num" id="cl-total">0</div><div class="stat-label">Total responses</div></div>
+        <div class="stat-card"><div class="stat-num" id="cl-hiring">0</div><div class="stat-label">Actively hiring</div></div>
+        <div class="stat-card"><div class="stat-num" id="cl-support" style="font-size:22px;padding-top:12px;line-height:1.2;">—</div><div class="stat-label">Top support need</div></div>
+        <div class="stat-card"><div class="stat-num" id="cl-urgency">—</div><div class="stat-label">Avg urgency</div></div>
+      </div>
+      <div id="cl-insight" class="insight-bar" style="display:none;">
+        <div class="insight-icon">💡</div>
+        <div class="insight-text" id="cl-insight-text"></div>
+      </div>
+      <div style="overflow:hidden;">
+        <button class="export-btn" onclick="exportCSV('clients')">Export CSV ↓</button>
+        <div class="section-label">All client responses</div>
+      </div>
+      <div class="data-table">
+        <div class="t-head client-cols">
+          <span>Name / Company</span><span>Hiring for</span><span>Urgency</span><span>Support needed</span><span></span>
+        </div>
+        <div id="cl-rows"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DRAWER -->
+<div class="overlay" id="overlay" onclick="maybeClose(event)">
+  <div class="drawer">
+    <button class="drawer-close" onclick="closeDrawer()">Close ✕</button>
+    <div class="drawer-type" id="d-type"></div>
+    <div class="drawer-name" id="d-name"></div>
+    <div class="drawer-date" id="d-date"></div>
+    <div class="drawer-rule"></div>
+    <div class="qa-list" id="d-qa"></div>
+  </div>
+</div>
+
+<script>
+// ── CREDENTIALS ─────────────────────────────────────────────
+// Change these to whatever you want before going live
+const CREDS = { user: 'arvo', pass: 'arvo2024' };
+
+// ── QUESTION LABELS (for drawer display) ────────────────────
+const CQ_LABELS = {
+  role_target:  "Role they're exploring",
+  readiness:    "Readiness to move",
+  motivation:   "What would make them move",
+  growth:       "Growth vision (2–3 years)",
+  dealbreakers: "Non-negotiables",
+  notice:       "Notice period",
+  extra:        "Anything else",
+};
+const CLQ_LABELS = {
+  hiring_for:   "Hiring for",
+  urgency:      "Urgency (1–10)",
+  challenge:    "Biggest hiring challenge",
+  support:      "Where ARVO can help more",
+  culture:      "Company culture",
+  past_exp:     "Experience with ARVO",
+  extra:        "Anything else",
+};
+
+// ── STATE ────────────────────────────────────────────────────
+let db = { candidates: [], clients: [] };
+let authed = false;
+
+function getDB() {
+  return JSON.parse(localStorage.getItem('arvo_db') || '{"candidates":[],"clients":[]}');
+}
+
+// ── AUTH ─────────────────────────────────────────────────────
+function login() {
+  const u = document.getElementById('lu').value.trim();
+  const p = document.getElementById('lp').value.trim();
+  const err = document.getElementById('lerr');
+  if (u === CREDS.user && p === CREDS.pass) {
+    err.style.display = 'none';
+    authed = true;
+    db = getDB();
+    seedDemo();
+    document.getElementById('login-view').style.display = 'none';
+    document.getElementById('dash-view').style.display = 'flex';
+    document.getElementById('dash-date').textContent = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+    renderCandidates();
+  } else {
+    err.style.display = 'block';
+  }
+}
+
+function logout() {
+  authed = false;
+  document.getElementById('lu').value = '';
+  document.getElementById('lp').value = '';
+  document.getElementById('dash-view').style.display = 'none';
+  document.getElementById('login-view').style.display = 'flex';
+}
+
+// ── TABS ─────────────────────────────────────────────────────
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-candidates').style.display = tab === 'candidates' ? 'block' : 'none';
+  document.getElementById('tab-clients').style.display = tab === 'clients' ? 'block' : 'none';
+  db = getDB();
+  if (tab === 'candidates') renderCandidates(); else renderClients();
+}
+
+// ── CANDIDATES ───────────────────────────────────────────────
+function renderCandidates() {
+  const data = db.candidates;
+  document.getElementById('c-total').textContent = data.length;
+  const active = data.filter(d => (d.a.readiness || '').includes('actively')).length;
+  document.getElementById('c-active').textContent = active;
+
+  const motives = {};
+  data.forEach(d => { if (d.a.motivation) motives[d.a.motivation] = (motives[d.a.motivation] || 0) + 1; });
+  const topM = Object.entries(motives).sort((a, b) => b[1] - a[1])[0];
+  document.getElementById('c-motive').textContent = topM ? topM[0].split('—')[0].trim() : '—';
+
+  const notices = {};
+  data.forEach(d => { if (d.a.notice) notices[d.a.notice] = (notices[d.a.notice] || 0) + 1; });
+  const topN = Object.entries(notices).sort((a, b) => b[1] - a[1])[0];
+  document.getElementById('c-notice').textContent = topN ? topN[0] : '—';
+
+  // Insight
+  if (data.length >= 3 && topM) {
+    const pct = Math.round(motives[topM[0]] / data.length * 100);
+    const insight = document.getElementById('c-insight');
+    document.getElementById('c-insight-text').innerHTML =
+      `<strong>${pct}% of candidates</strong> cite <strong>${topM[0].split('—')[0].trim().toLowerCase()}</strong> as their primary reason to move. ${active} out of ${data.length} are actively ready to interview right now.`;
+    insight.style.display = 'flex';
+  }
+
+  const rows = document.getElementById('c-rows');
+  if (!data.length) { rows.innerHTML = `<div class="empty-state">No candidate responses yet. Share <strong>arvo-candidate.html</strong> to start collecting.</div>`; return; }
+
+  rows.innerHTML = data.slice().reverse().map(d => {
+    const r = d.a.readiness || '';
+    const pc = r.includes('actively') ? 'pill-active' : r.includes('open') ? 'pill-open' : 'pill-passive';
+    const pt = r.includes('actively') ? 'Active' : r.includes('open') ? 'Open' : r.includes('exploring') ? 'Exploring' : 'Passive';
+    const drv = (d.a.motivation || '—').split('—')[0].trim();
+    const ntc = d.a.notice || '—';
+    const date = new Date(d.ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    return `<div class="t-row cand-cols" onclick="openDrawer('candidate',${d.id})">
+      <span class="r-name">${d.a.name || 'Anonymous'} <span style="font-size:11px;font-weight:300;color:var(--text-sub);margin-left:6px;">${date}</span></span>
+      <span class="r-muted">${d.a.role_target || '—'}</span>
+      <span><span class="pill ${pc}">${pt}</span></span>
+      <span class="r-muted">${drv}</span>
+      <span class="r-muted">${ntc}</span>
+      <span><button class="row-btn" onclick="event.stopPropagation();openDrawer('candidate',${d.id})">View</button></span>
+    </div>`;
+  }).join('');
+}
+
+// ── CLIENTS ──────────────────────────────────────────────────
+function renderClients() {
+  const data = db.clients;
+  document.getElementById('cl-total').textContent = data.length;
+  document.getElementById('cl-hiring').textContent = data.filter(d => d.a.hiring_for && d.a.hiring_for.trim()).length;
+
+  const supports = {};
+  data.forEach(d => { if (d.a.support) supports[d.a.support] = (supports[d.a.support] || 0) + 1; });
+  const topS = Object.entries(supports).sort((a, b) => b[1] - a[1])[0];
+  document.getElementById('cl-support').textContent = topS ? topS[0] : '—';
+
+  const urgencies = data.map(d => parseInt(d.a.urgency)).filter(Boolean);
+  const avg = urgencies.length ? (urgencies.reduce((a, b) => a + b) / urgencies.length).toFixed(1) : '—';
+  document.getElementById('cl-urgency').textContent = avg !== '—' ? avg + '/10' : '—';
+
+  // Insight
+  if (data.length >= 2 && topS) {
+    const pct = Math.round(supports[topS[0]] / data.length * 100);
+    const insight = document.getElementById('cl-insight');
+    document.getElementById('cl-insight-text').innerHTML =
+      `<strong>${pct}% of clients</strong> say their biggest unmet need is <strong>${topS[0].toLowerCase()}</strong>. Average hire urgency is <strong>${avg}/10</strong>.`;
+    insight.style.display = 'flex';
+  }
+
+  const rows = document.getElementById('cl-rows');
+  if (!data.length) { rows.innerHTML = `<div class="empty-state">No client responses yet. Share <strong>arvo-client.html</strong> to start collecting.</div>`; return; }
+
+  rows.innerHTML = data.slice().reverse().map(d => {
+    const u = parseInt(d.a.urgency) || 0;
+    const pc = u >= 8 ? 'pill-hot' : u >= 5 ? 'pill-open' : 'pill-passive';
+    const sup = (d.a.support || '—').split('&')[0].trim();
+    const date = new Date(d.ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    return `<div class="t-row client-cols" onclick="openDrawer('client',${d.id})">
+      <span class="r-name">${d.a.name || 'Anonymous'} <span style="font-size:11px;font-weight:300;color:var(--text-sub);margin-left:6px;">${date}</span></span>
+      <span class="r-muted">${d.a.hiring_for || '—'}</span>
+      <span><span class="pill ${pc}">${d.a.urgency || '—'}/10</span></span>
+      <span class="r-muted">${sup}</span>
+      <span><button class="row-btn" onclick="event.stopPropagation();openDrawer('client',${d.id})">View</button></span>
+    </div>`;
+  }).join('');
+}
+
+// ── DRAWER ───────────────────────────────────────────────────
+function openDrawer(type, id) {
+  const data = type === 'candidate' ? db.candidates : db.clients;
+  const entry = data.find(d => d.id === id); if (!entry) return;
+  const labels = type === 'candidate' ? CQ_LABELS : CLQ_LABELS;
+
+  document.getElementById('d-type').textContent = type === 'candidate' ? 'Candidate Alignment' : 'Client Alignment';
+  document.getElementById('d-name').textContent = entry.a.name || 'Anonymous';
+  document.getElementById('d-date').textContent = 'Submitted ' + new Date(entry.ts).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+
+  document.getElementById('d-qa').innerHTML = Object.entries(labels)
+    .filter(([key]) => entry.a[key])
+    .map(([key, label]) => `
+      <div class="qa-item">
+        <div class="qa-q">${label}</div>
+        <div class="qa-a">${entry.a[key]}</div>
+      </div>`).join('');
+
+  document.getElementById('overlay').classList.add('open');
+}
+
+function maybeClose(e) { if (e.target === document.getElementById('overlay')) closeDrawer(); }
+function closeDrawer() { document.getElementById('overlay').classList.remove('open'); }
+
+// ── CSV EXPORT ───────────────────────────────────────────────
+function exportCSV(type) {
+  const data = db[type];
+  if (!data.length) return;
+  const keys = type === 'candidates'
+    ? ['name','role_target','readiness','motivation','growth','dealbreakers','notice','extra']
+    : ['name','hiring_for','urgency','challenge','support','culture','past_exp','extra'];
+
+  const headers = ['Date', ...keys];
+  const rows = data.map(d => [
+    new Date(d.ts).toLocaleDateString('en-GB'),
+    ...keys.map(k => `"${(d.a[k] || '').replace(/"/g, '""')}"`)
+  ]);
+
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `arvo-${type}-${Date.now()}.csv`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── DEMO SEED ────────────────────────────────────────────────
+function seedDemo() {
+  if (db.candidates.length || db.clients.length) return;
+  const n = Date.now();
+  [
+    {name:'James Hoffman',role_target:'Head of Sales',readiness:"I'm actively looking and ready to interview",motivation:"Growth & progression — I've hit a ceiling",growth:'Lead a team of 10+ with P&L ownership within 3 years.',dealbreakers:'Below R55k, no remote, micromanagement',notice:'1 month',extra:''},
+    {name:'Aisha Patel',role_target:'Senior Product Manager',readiness:"I'm open but need the right opportunity",motivation:"Purpose & impact — I want to build something meaningful",growth:'Transition into a CPO role at a Series A/B startup.',dealbreakers:'Corp environments, no equity, no product influence',notice:'2 months',extra:'Mentoring two junior PMs on the side.'},
+    {name:'Luca Nkosi',role_target:'Full Stack Developer',readiness:"I'm exploring — not urgent",motivation:"Compensation — I need more",growth:'Tech lead, then CTO at a startup.',dealbreakers:'Legacy stack, no tests, no learning culture',notice:'2–4 weeks',extra:''},
+    {name:'Priya Singh',role_target:'CFO / Financial Director',readiness:"I'm comfortable but curious",motivation:"Flexibility — remote, hours, autonomy",growth:'FD at a mission-driven company with equity.',dealbreakers:'No flexibility, listed corp, no growth mandate',notice:'3 months +',extra:'Only interested in companies with real ESG commitments.'},
+  ].forEach((a, i) => db.candidates.push({ id: n - i * 10000, type:'candidate', ts: new Date(n - i * 259200000).toISOString(), a }));
+  [
+    {name:'Daneel van Zyl — Old School',hiring_for:'Head of Marketing',urgency:9,challenge:"Finding the right culture fit",support:"Being a sounding board throughout",culture:'Gritty, owner-led, no egos.',past_exp:"Great — let's do more of what's working",extra:'We need someone who gets brand, not just performance.'},
+    {name:'Sara Mitchell — Finovate',hiring_for:'Senior Developer + DevOps Lead',urgency:7,challenge:"Finding the right technical skills",support:"Salary benchmarking & negotiation",culture:'Fast-paced, trust-first, async-friendly.',past_exp:'Good — with room to improve',extra:''},
+    {name:'MC — Pure Legacy',hiring_for:'General Manager',urgency:8,challenge:"We don't fully know what we're looking for yet",support:"Helping us define the role before we hire",culture:'Performance culture with strong values. We move fast.',past_exp:"Great — let's do more of what's working",extra:'Seven-year relationship with ARVO. Trust is everything.'},
+  ].forEach((a, i) => db.clients.push({ id: n - i * 20000, type:'client', ts: new Date(n - i * 432000000).toISOString(), a }));
+  localStorage.setItem('arvo_db', JSON.stringify(db));
+}
+</script>
+</body>
+</html>
