@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARVO — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,300&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#1d7d7d;--blue-dark:#155a5a;--blue-mid:#1e6868;--blue-card:#1a5f5f;--blue-deep:#114848;
+  --peach:#f5b896;--peach-drk:#e89872;--peach-lt:rgba(245,184,150,0.15);
+  --cream:#fdf6ef;--sub:rgba(245,184,150,0.55);--border:rgba(245,184,150,0.16);--border-hi:rgba(245,184,150,0.45);
+  --green:#6ddba0;--green-bg:rgba(109,219,160,0.12);
+  --amber:#f5c842;--amber-bg:rgba(245,200,66,0.12);
+  --red:#f57c6d;--red-bg:rgba(245,124,109,0.12);
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Nunito Sans',sans-serif;background:var(--blue);color:var(--peach);min-height:100vh;-webkit-font-smoothing:antialiased;}
+
+/* LOGIN */
+#login-view{display:flex;flex-direction:column;min-height:100vh;}
+.login-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 24px;}
+.login-card{background:var(--blue-mid);border:1px solid var(--border);border-radius:16px;padding:52px 48px;width:100%;max-width:400px;text-align:center;}
+.login-logo{font-size:40px;font-weight:800;letter-spacing:0.18em;color:var(--peach);text-transform:uppercase;margin-bottom:4px;}
+.login-tag{font-size:11px;color:var(--sub);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:44px;}
+.login-fields{display:flex;flex-direction:column;gap:14px;margin-bottom:8px;}
+.login-fields input{width:100%;background:var(--blue-dark);border:1px solid var(--border);border-radius:8px;padding:14px 18px;font-family:'Nunito Sans',sans-serif;font-size:15px;color:var(--peach);outline:none;transition:border-color 0.2s;}
+.login-fields input:focus{border-color:var(--border-hi);}
+.login-fields input::placeholder{color:var(--sub);}
+.login-err{font-size:12px;color:var(--red);margin:10px 0 14px;display:none;}
+.login-btn{width:100%;background:var(--peach);color:var(--blue);border:none;border-radius:8px;padding:14px;font-family:'Nunito Sans',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:6px;}
+.login-btn:hover{background:var(--peach-drk);}
+
+/* NAV */
+.nav{background:var(--cream);padding:0 48px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;border-bottom:1px solid #e4d8ca;}
+.nav-logo{font-size:17px;font-weight:800;letter-spacing:0.22em;color:var(--blue);text-transform:uppercase;}
+.nav-logo em{font-style:normal;font-weight:400;font-size:11px;color:#aaa;margin-left:8px;letter-spacing:0.14em;text-transform:lowercase;}
+.nav-right{display:flex;align-items:center;gap:16px;}
+.nav-date{font-size:11px;color:#aaa;letter-spacing:0.06em;}
+.nav-out{background:none;border:1.5px solid #c8bdb0;border-radius:4px;padding:7px 16px;font-family:'Nunito Sans',sans-serif;font-size:11px;font-weight:600;color:#888;cursor:pointer;transition:all 0.2s;letter-spacing:0.08em;}
+.nav-out:hover{border-color:var(--blue);color:var(--blue);}
+.nav-refresh{background:var(--blue);border:none;border-radius:4px;padding:7px 16px;font-family:'Nunito Sans',sans-serif;font-size:11px;font-weight:600;color:var(--cream);cursor:pointer;transition:all 0.2s;letter-spacing:0.08em;}
+.nav-refresh:hover{background:var(--blue-dark);}
+
+/* TABS */
+.tabs{background:var(--blue-dark);border-bottom:1px solid var(--border);padding:0 48px;display:flex;}
+.tab{padding:15px 0;margin-right:40px;border:none;background:none;font-family:'Nunito Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;margin-bottom:-1px;}
+.tab.active{color:var(--peach);border-bottom-color:var(--peach);}
+.tab-count{background:var(--peach-lt);color:var(--peach);border-radius:10px;padding:1px 8px;font-size:10px;margin-left:6px;font-weight:700;}
+
+/* DASH */
+#dash-view{display:none;flex-direction:column;min-height:100vh;}
+.dash-body{padding:40px 48px 80px;}
+
+/* LOADING */
+.loading-state{padding:80px 24px;text-align:center;color:var(--sub);font-size:14px;font-style:italic;}
+.loading-spinner{display:inline-block;width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--peach);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px;}
+.stat{background:var(--blue-mid);border:1px solid var(--border);border-radius:12px;padding:24px 22px;position:relative;overflow:hidden;}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--peach);opacity:0.3;}
+.stat.highlight::before{opacity:1;}
+.stat-num{font-size:42px;font-weight:800;color:var(--peach);line-height:1;margin-bottom:5px;letter-spacing:-0.02em;}
+.stat-label{font-size:10px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--sub);}
+
+/* INSIGHT BANNER */
+.insight-banner{background:var(--blue-deep);border:1px solid var(--border-hi);border-radius:10px;padding:18px 22px;margin-bottom:32px;display:flex;gap:14px;align-items:flex-start;}
+.ib-icon{font-size:20px;flex-shrink:0;}
+.ib-text{font-size:13px;color:var(--sub);line-height:1.6;}
+.ib-text strong{color:var(--peach);font-weight:700;}
+
+/* SEC */
+.sec{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.sec-title{font-size:11px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:var(--sub);}
+.sec-action{font-size:11px;font-weight:600;color:var(--sub);cursor:pointer;background:none;border:1px solid var(--border);border-radius:4px;padding:5px 12px;font-family:'Nunito Sans',sans-serif;transition:all 0.15s;letter-spacing:0.06em;}
+.sec-action:hover{border-color:var(--peach);color:var(--peach);}
+
+/* CANDIDATE CARDS */
+.candidates-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:40px;}
+.cand-card{background:var(--blue-mid);border:1px solid var(--border);border-radius:12px;padding:22px 24px;cursor:pointer;transition:all 0.2s;position:relative;}
+.cand-card:hover{border-color:var(--border-hi);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.2);}
+.cand-card.top-pick{border-color:var(--green);}
+.cand-card.top-pick::after{content:'⭐ Top Pick';position:absolute;top:14px;right:14px;font-size:9px;font-weight:700;letter-spacing:0.1em;background:var(--green-bg);color:var(--green);padding:3px 9px;border-radius:10px;}
+.cc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.cc-name{font-size:18px;font-weight:800;color:var(--peach);line-height:1.1;}
+.cc-role{font-size:12px;color:var(--sub);margin-top:3px;font-style:italic;}
+.score-ring{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;border:2.5px solid;flex-shrink:0;}
+.score-high{border-color:var(--green);color:var(--green);background:var(--green-bg);}
+.score-mid{border-color:var(--amber);color:var(--amber);background:var(--amber-bg);}
+.score-low{border-color:var(--red);color:var(--red);background:var(--red-bg);}
+.score-label{font-size:9px;color:var(--sub);text-align:center;margin-top:3px;letter-spacing:0.06em;text-transform:uppercase;}
+.cc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.tag{display:inline-block;padding:3px 9px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
+.tag-green{background:var(--green-bg);color:var(--green);}
+.tag-amber{background:var(--amber-bg);color:var(--amber);}
+.tag-red{background:var(--red-bg);color:var(--red);}
+.tag-blue{background:rgba(245,184,150,0.1);color:var(--peach);}
+.cc-insight{font-size:12px;color:var(--sub);line-height:1.55;border-top:1px solid var(--border);padding-top:12px;font-style:italic;}
+.cc-insight strong{color:var(--peach);font-style:normal;font-weight:600;}
+.cc-meta{display:flex;gap:16px;margin-top:12px;}
+.cc-meta-item{font-size:11px;color:var(--sub);display:flex;align-items:center;gap:4px;}
+.cc-meta-item strong{color:var(--peach);font-weight:600;}
+
+/* BREAKDOWN */
+.breakdown-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:40px;}
+.breakdown-card{background:var(--blue-mid);border:1px solid var(--border);border-radius:12px;padding:24px;}
+.bc-title{font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--sub);margin-bottom:20px;}
+.bar-item{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.bar-item:last-child{margin-bottom:0;}
+.bar-label{font-size:12px;color:var(--peach);min-width:150px;font-weight:400;flex-shrink:0;}
+.bar-track{flex:1;height:6px;background:rgba(245,184,150,0.1);border-radius:3px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;background:var(--peach);transition:width 1s ease;}
+.bar-count{font-size:11px;color:var(--sub);min-width:24px;text-align:right;font-weight:600;}
+
+/* TABLE */
+.table-wrap{background:var(--blue-mid);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:40px;}
+.t-head{display:grid;padding:12px 22px;background:rgba(0,0,0,0.2);font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--sub);gap:14px;border-bottom:1px solid var(--border);}
+.t-row{display:grid;padding:16px 22px;gap:14px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.12s;font-size:13px;}
+.t-row:last-child{border-bottom:none;}
+.t-row:hover{background:rgba(0,0,0,0.1);}
+.cand-table-cols{grid-template-columns:1.8fr 1.5fr 1fr 1fr 1fr 60px 70px;}
+.client-table-cols{grid-template-columns:1.8fr 1.5fr 0.8fr 1fr 1.2fr 70px;}
+.r-name{font-weight:700;color:var(--peach);}
+.r-muted{color:var(--sub);font-size:12px;}
+
+/* CLIENT CARDS */
+.clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:40px;}
+.client-card{background:var(--blue-mid);border:1px solid var(--border);border-radius:12px;padding:22px 24px;cursor:pointer;transition:all 0.2s;position:relative;}
+.client-card:hover{border-color:var(--border-hi);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.2);}
+.client-card.urgent{border-color:var(--red);}
+.client-card.urgent::after{content:'🔥 Urgent';position:absolute;top:14px;right:14px;font-size:9px;font-weight:700;background:var(--red-bg);color:var(--red);padding:3px 9px;border-radius:10px;}
+.cl-name{font-size:17px;font-weight:800;color:var(--peach);}
+.cl-role{font-size:12px;color:var(--sub);font-style:italic;margin-top:3px;margin-bottom:14px;}
+.cl-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.cl-insight{font-size:12px;color:var(--sub);line-height:1.55;border-top:1px solid var(--border);padding-top:12px;}
+.cl-insight strong{color:var(--peach);font-weight:600;font-style:normal;}
+
+/* ARVO+ */
+.signal-board{background:var(--blue-deep);border:1px solid var(--border-hi);border-radius:12px;padding:28px;margin-bottom:40px;}
+.signal-board-title{font-size:13px;font-weight:700;color:var(--peach);margin-bottom:4px;}
+.signal-board-sub{font-size:12px;color:var(--sub);margin-bottom:24px;font-style:italic;}
+.signals-list{display:flex;flex-direction:column;gap:12px;}
+.signal-item{background:var(--blue-mid);border:1px solid var(--border);border-radius:8px;padding:16px 20px;display:flex;align-items:flex-start;gap:14px;}
+.signal-icon{font-size:18px;flex-shrink:0;}
+.signal-company{font-size:10px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--sub);margin-bottom:5px;}
+.signal-text{font-size:13px;color:var(--peach);line-height:1.55;}
+
+/* DRAWER */
+.overlay{display:none;position:fixed;inset:0;background:rgba(10,40,40,0.7);z-index:300;justify-content:flex-end;backdrop-filter:blur(3px);}
+.overlay.open{display:flex;}
+.drawer{background:var(--blue-dark);border-left:1px solid var(--border);width:100%;max-width:560px;height:100vh;overflow-y:auto;padding:48px 44px;position:relative;animation:slideIn 0.28s cubic-bezier(.4,0,.2,1);}
+@keyframes slideIn{from{transform:translateX(100%);}to{transform:translateX(0);}}
+.drawer-close{position:absolute;top:20px;right:20px;background:none;border:1px solid var(--border);border-radius:4px;cursor:pointer;padding:6px 12px;font-size:10px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--sub);font-family:'Nunito Sans',sans-serif;transition:all 0.15s;}
+.drawer-close:hover{border-color:var(--peach);color:var(--peach);}
+.d-type{font-size:10px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:var(--sub);margin-bottom:6px;}
+.d-name{font-size:32px;font-weight:800;color:var(--peach);line-height:1;margin-bottom:4px;}
+.d-sub{font-size:13px;color:var(--sub);font-style:italic;margin-bottom:6px;}
+.d-date{font-size:11px;color:var(--sub);margin-bottom:20px;}
+.d-score-row{display:flex;align-items:center;gap:12px;margin-bottom:24px;padding:16px 18px;background:var(--blue-mid);border-radius:10px;border:1px solid var(--border);}
+.d-score-label strong{color:var(--peach);font-size:18px;font-weight:800;display:block;margin-bottom:2px;}
+.d-score-label{font-size:11px;color:var(--sub);}
+.d-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;}
+.drawer-rule{height:1px;background:var(--border);margin-bottom:24px;}
+.qa-list{display:flex;flex-direction:column;gap:24px;}
+.qa-section-head{font-size:10px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--peach);padding:8px 0;border-bottom:1px solid var(--border);margin-top:8px;}
+.qa-q{font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--sub);margin-bottom:6px;}
+.qa-a{font-size:14px;color:var(--peach);line-height:1.65;font-weight:400;}
+.empty-state{padding:72px 24px;text-align:center;color:var(--sub);font-size:14px;font-weight:300;font-style:italic;line-height:1.7;}
+
+@media(max-width:1000px){.stats-row{grid-template-columns:1fr 1fr;}.breakdown-row{grid-template-columns:1fr;}}
+@media(max-width:680px){.nav,.tabs,.dash-body{padding-left:20px;padding-right:20px;}.drawer{max-width:100%;padding:32px 20px;}}
+</style>
+</head>
+<body>
+
+<div id="login-view">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">ARVO</div>
+      <div class="login-tag">Team Dashboard</div>
+      <div class="login-fields">
+        <input type="text" id="lu" placeholder="Username"/>
+        <input type="password" id="lp" placeholder="Password" onkeydown="if(event.key==='Enter')login()"/>
+      </div>
+      <div class="login-err" id="lerr">Incorrect credentials.</div>
+      <button class="login-btn" onclick="login()">Enter Dashboard</button>
+    </div>
+  </div>
+</div>
+
+<div id="dash-view">
+  <nav class="nav">
+    <div class="nav-logo">ARVO <em>dashboard</em></div>
+    <div class="nav-right">
+      <span class="nav-date" id="dash-date"></span>
+      <button class="nav-refresh" onclick="refreshData()">↻ Refresh</button>
+      <button class="nav-out" onclick="logout()">Sign Out</button>
+    </div>
+  </nav>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('candidates',this)">Candidates <span class="tab-count" id="tc-c">0</span></button>
+    <button class="tab" onclick="switchTab('clients',this)">Clients <span class="tab-count" id="tc-cl">0</span></button>
+    <button class="tab" onclick="switchTab('arvoplus',this)">ARVO+ Signals <span class="tab-count" id="tc-ap">0</span></button>
+  </div>
+  <div class="dash-body">
+    <div id="tab-candidates"></div>
+    <div id="tab-clients" style="display:none;"></div>
+    <div id="tab-arvoplus" style="display:none;"></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="maybeClose(event)">
+  <div class="drawer">
+    <button class="drawer-close" onclick="closeDrawer()">Close ✕</button>
+    <div class="d-type" id="d-type"></div>
+    <div class="d-name" id="d-name"></div>
+    <div class="d-sub" id="d-sub"></div>
+    <div class="d-date" id="d-date"></div>
+    <div class="d-score-row" id="d-score-row" style="display:none;">
+      <div class="score-ring" id="d-score-ring"></div>
+      <div>
+        <div class="d-score-label"><strong id="d-score-val">—</strong>Alignment Score</div>
+        <div id="d-score-why" style="font-size:11px;color:var(--sub);margin-top:2px;max-width:340px;line-height:1.45;"></div>
+      </div>
+    </div>
+    <div class="d-tags" id="d-tags"></div>
+    <div class="drawer-rule"></div>
+    <div class="qa-list" id="d-qa"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://yjvyakalhoswnrioeppd.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlqdnlha2FsaG9zd25yaW9lcHBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDI5NTcsImV4cCI6MjA4ODMxODk1N30.etXqE0gEDsApXHRvZ_5mgIMei7t0AVv4aJZyV_eSMzE';
+const CREDS={user:'arvo',pass:'arvo2024'};
+
+let db={candidates:[],clients:[]};
+let currentTab='candidates';
+
+// ── SUPABASE ─────────────────────────────────
+async function fetchFromSupabase(table){
+  const res=await fetch(`${SUPABASE_URL}/rest/v1/${table}?order=created_at.desc`,{
+    headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json'}
+  });
+  if(!res.ok)throw new Error(`Fetch error: ${res.status}`);
+  return res.json();
+}
+
+async function loadData(){
+  const [cands,clients]=await Promise.all([fetchFromSupabase('candidates'),fetchFromSupabase('clients')]);
+  db.candidates=cands.map(r=>({id:r.id,ts:r.created_at,role:r.role||'',company:r.company||'',a:r.answers||{}}));
+  db.clients=clients.map(r=>({id:r.id,ts:r.created_at,a:r.answers||{}}));
+}
+
+// ── AUTH ─────────────────────────────────────
+async function login(){
+  const u=document.getElementById('lu').value.trim();
+  const p=document.getElementById('lp').value.trim();
+  const err=document.getElementById('lerr');
+  if(u!==CREDS.user||p!==CREDS.pass){err.style.display='block';return;}
+  err.style.display='none';
+  document.getElementById('login-view').style.display='none';
+  document.getElementById('dash-view').style.display='flex';
+  document.getElementById('dash-date').textContent=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('tab-candidates').innerHTML=loadingHtml();
+  await refreshData();
+}
+
+function logout(){
+  document.getElementById('dash-view').style.display='none';
+  document.getElementById('login-view').style.display='flex';
+  document.getElementById('lu').value='';
+  document.getElementById('lp').value='';
+}
+
+async function refreshData(){
+  try{
+    await loadData();
+    document.getElementById('tc-c').textContent=db.candidates.length;
+    document.getElementById('tc-cl').textContent=db.clients.length;
+    document.getElementById('tc-ap').textContent=db.clients.filter(c=>c.a.wish_existed||c.a.biggest_headache).length;
+    if(currentTab==='candidates')renderCandidates();
+    else if(currentTab==='clients')renderClients();
+    else renderArvoPlus();
+  }catch(e){
+    console.error(e);
+    document.getElementById('tab-'+currentTab).innerHTML=`<div class="empty-state">⚠️ Could not load data from database.<br>Check your connection and try refreshing.</div>`;
+  }
+}
+
+function loadingHtml(){
+  return`<div class="loading-state"><div class="loading-spinner"></div><br>Loading from database...</div>`;
+}
+
+// ── TABS ─────────────────────────────────────
+function switchTab(tab,btn){
+  currentTab=tab;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['tab-candidates','tab-clients','tab-arvoplus'].forEach(t=>document.getElementById(t).style.display='none');
+  document.getElementById(`tab-${tab}`).style.display='block';
+  if(tab==='candidates')renderCandidates();
+  else if(tab==='clients')renderClients();
+  else renderArvoPlus();
+}
+
+// ── SCORING ───────────────────────────────────
+function scoreCandidate(c){
+  let score=0,reasons=[],flags=[];
+  const a=c.a;
+  if((a.readiness||'').includes('Actively')){score+=30;reasons.push('actively looking');}
+  else if((a.readiness||'').includes('Open')){score+=20;reasons.push('open to move');}
+  else if((a.readiness||'').includes('Exploring')){score+=10;}
+  else{score+=5;flags.push('not actively looking');}
+  if((a.decision_style||'').includes('move anyway')){score+=20;reasons.push('high autonomy');}
+  else if((a.decision_style||'').includes('gather')){score+=15;}
+  else if((a.decision_style||'').includes('flag')){score+=8;flags.push('may need direction');}
+  else{score+=5;flags.push('prefers certainty');}
+  if((a.feedback_style||'').includes('actively seek')){score+=15;reasons.push('feedback-oriented');}
+  else if((a.feedback_style||'').includes('okay')){score+=12;}
+  else if((a.feedback_style||'').includes('building')){score+=7;}
+  else{score+=5;}
+  if((a.env_experience||'').length>80){score+=20;reasons.push('strong env experience');}
+  else if((a.env_experience||'').length>30){score+=12;}
+  else if(a.env_experience){score+=6;}
+  if((a.nonneg_proof||'').length>80){score+=15;reasons.push('proven non-negotiable');}
+  else if((a.nonneg_proof||'').length>30){score+=8;}
+  return{score:Math.min(Math.round(score/100*100),99),reasons,flags};
+}
+
+function scoreClass(s){return s>=72?'score-high':s>=48?'score-mid':'score-low';}
+function readinessTag(r){
+  if(!r)return{text:'Unknown',cls:'tag-blue'};
+  if(r.includes('Actively'))return{text:'Active',cls:'tag-green'};
+  if(r.includes('Open'))return{text:'Open',cls:'tag-amber'};
+  if(r.includes('Exploring'))return{text:'Exploring',cls:'tag-blue'};
+  return{text:'Passive',cls:'tag-red'};
+}
+
+// ── CANDIDATES ────────────────────────────────
+function renderCandidates(){
+  const data=db.candidates;
+  const scored=data.map(d=>({...d,...scoreCandidate(d)})).sort((a,b)=>b.score-a.score);
+  const active=data.filter(d=>(d.a.readiness||'').includes('Actively')).length;
+  const avgScore=scored.length?Math.round(scored.reduce((s,d)=>s+d.score,0)/scored.length):0;
+  const motives={};
+  data.forEach(d=>{const m=(d.a.real_move_driver||d.a.motivation||'');if(m){const k=m.split('—')[0].trim();motives[k]=(motives[k]||0)+1;}});
+  const topM=Object.entries(motives).sort((a,b)=>b[1]-a[1])[0];
+
+  let insightHtml='';
+  if(scored.length>=2){
+    const topPicks=scored.filter(d=>d.score>=72).length;
+    insightHtml=`<div class="insight-banner"><div class="ib-icon">💡</div><div class="ib-text">
+      You have <strong>${scored.length} candidate${scored.length>1?'s':''}</strong> in the pipeline.
+      <strong>${topPicks} score above 72%</strong> alignment — these are your highest-priority conversations.
+      ${active>0?`<strong>${active} ${active===1?'is':'are'} actively looking</strong> and ready to interview now.`:''}
+      ${topM?` The dominant move driver is <strong>${topM[0].toLowerCase()}</strong>.`:''}
+    </div></div>`;
+  }
+
+  let cardsHtml='';
+  if(!scored.length){
+    cardsHtml=`<div class="empty-state" style="grid-column:1/-1;">No candidate responses yet.<br>Open <strong>arvo-candidate.html</strong>, configure a role, and share the link.</div>`;
+  }else{
+    cardsHtml=scored.slice(0,6).map((d,i)=>{
+      const rt=readinessTag(d.a.readiness);
+      const sc=scoreClass(d.score);
+      const isTop=i===0&&d.score>=65;
+      const driver=(d.a.real_move_driver||d.a.motivation||'').split('—')[0].trim();
+      const notice=d.a.notice||'—';
+      const envExp=d.a.env_experience?'"'+d.a.env_experience.substring(0,100)+'…"':null;
+      return`<div class="cand-card${isTop?' top-pick':''}" onclick="openCandDrawer(${d.id})">
+        <div class="cc-header">
+          <div><div class="cc-name">${d.a.name||'Anonymous'}</div><div class="cc-role">${d.a.current_role||d.role||'—'}</div></div>
+          <div><div class="score-ring ${sc}">${d.score}</div><div class="score-label">Alignment</div></div>
+        </div>
+        <div class="cc-tags">
+          <span class="tag ${rt.cls}">${rt.text}</span>
+          ${d.reasons.slice(0,2).map(r=>`<span class="tag tag-blue">${r}</span>`).join('')}
+          ${d.flags.slice(0,1).map(f=>`<span class="tag tag-amber">⚠ ${f}</span>`).join('')}
+        </div>
+        ${envExp?`<div class="cc-insight">${envExp}</div>`:''}
+        <div class="cc-meta">
+          <div class="cc-meta-item">🎯 <strong>${driver||'—'}</strong></div>
+          <div class="cc-meta-item">📅 <strong>${notice}</strong></div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const tableHtml=scored.length?scored.map(d=>{
+    const rt=readinessTag(d.a.readiness);
+    const sc=scoreClass(d.score);
+    const driver=(d.a.real_move_driver||d.a.motivation||'—').split('—')[0].split(' ').slice(0,3).join(' ');
+    return`<div class="t-row cand-table-cols" onclick="openCandDrawer(${d.id})">
+      <span class="r-name">${d.a.name||'Anonymous'}</span>
+      <span class="r-muted">${d.a.current_role||d.role||'—'}</span>
+      <span><span class="tag ${rt.cls}">${rt.text}</span></span>
+      <span class="r-muted">${driver}</span>
+      <span class="r-muted">${d.a.notice||'—'}</span>
+      <span><span class="score-ring ${sc}" style="width:36px;height:36px;font-size:11px;">${d.score}</span></span>
+      <span><button class="sec-action" onclick="event.stopPropagation();openCandDrawer(${d.id})">View</button></span>
+    </div>`;
+  }).join(''):`<div class="empty-state">No responses yet.</div>`;
+
+  document.getElementById('tab-candidates').innerHTML=`
+    <div class="stats-row">
+      <div class="stat highlight"><div class="stat-num">${data.length}</div><div class="stat-label">Total responses</div></div>
+      <div class="stat"><div class="stat-num">${active}</div><div class="stat-label">Active & ready</div></div>
+      <div class="stat"><div class="stat-num">${scored.length?avgScore+'%':'—'}</div><div class="stat-label">Avg alignment score</div></div>
+      <div class="stat"><div class="stat-num" style="font-size:${topM?'20px':'42px'};padding-top:${topM?'12px':'0'}">${topM?topM[0].split(' ').slice(0,2).join(' '):'—'}</div><div class="stat-label">Top move driver</div></div>
+    </div>
+    ${insightHtml}
+    <div class="sec"><div class="sec-title">Top Candidates by Alignment Score</div><button class="sec-action" onclick="exportCSV('candidates')">Export CSV ↓</button></div>
+    <div class="candidates-grid">${cardsHtml}</div>
+    <div class="breakdown-row">
+      <div class="breakdown-card"><div class="bc-title">Readiness to Move</div><div id="readiness-bars"></div></div>
+      <div class="breakdown-card"><div class="bc-title">Primary Move Driver</div><div id="motive-bars"></div></div>
+    </div>
+    <div class="sec"><div class="sec-title">All Candidates</div></div>
+    <div class="table-wrap">
+      <div class="t-head cand-table-cols"><span>Name</span><span>Role</span><span>Readiness</span><span>Driver</span><span>Notice</span><span>Score</span><span></span></div>
+      <div>${tableHtml}</div>
+    </div>`;
+
+  renderBars('readiness-bars',data,d=>(d.a.readiness||'Unknown').split('—')[0].trim().split(' ').slice(0,3).join(' '));
+  renderBars('motive-bars',data,d=>(d.a.real_move_driver||d.a.motivation||'Unknown').split('—')[0].trim().split(' ').slice(0,4).join(' '));
+}
+
+// ── CLIENTS ───────────────────────────────────
+function renderClients(){
+  const data=db.clients;
+  const urgent=data.filter(d=>parseInt(d.a.urgency||0)>=8).length;
+  const urgencies=data.map(d=>parseInt(d.a.urgency)).filter(Boolean);
+  const avg=urgencies.length?(urgencies.reduce((a,b)=>a+b)/urgencies.length).toFixed(1):'—';
+  const supports={};
+  data.forEach(d=>{if(d.a.support){const k=d.a.support.split('&')[0].split(' ').slice(0,3).join(' ');supports[k]=(supports[k]||0)+1;}});
+  const topS=Object.entries(supports).sort((a,b)=>b[1]-a[1])[0];
+
+  let insightHtml='';
+  if(data.length>=2){
+    insightHtml=`<div class="insight-banner"><div class="ib-icon">📊</div><div class="ib-text">
+      <strong>${data.length} client${data.length>1?'s':''}</strong> have submitted alignment surveys.
+      <strong>${urgent} ${urgent===1?'is':'are'} urgent (8+/10)</strong> — these are your immediate priority.
+      ${topS?`Most common unmet need: <strong>${topS[0].toLowerCase()}</strong>.`:''}
+      ${avg!=='—'?` Average hire urgency: <strong>${avg}/10</strong>.`:''}
+    </div></div>`;
+  }
+
+  const sorted=data.slice().sort((a,b)=>(parseInt(b.a.urgency)||0)-(parseInt(a.a.urgency)||0));
+  let cardsHtml='';
+  if(!data.length){
+    cardsHtml=`<div class="empty-state" style="grid-column:1/-1;">No client responses yet. Share <strong>arvo-client.html</strong> to start collecting.</div>`;
+  }else{
+    cardsHtml=sorted.map(d=>{
+      const urg=parseInt(d.a.urgency)||0;
+      const urgCls=urg>=8?'tag-red':urg>=5?'tag-amber':'tag-blue';
+      const arvoR=parseInt(d.a.arvo_rating||0);
+      const rCls=arvoR>=8?'tag-green':arvoR>=5?'tag-amber':arvoR>0?'tag-red':'tag-blue';
+      const envs=d.a.environment?d.a.environment.split('||').slice(0,2):[];
+      const quote=d.a.arvo_gap?`"${d.a.arvo_gap.substring(0,120)}…"`:d.a.role_in_one?`"${d.a.role_in_one.substring(0,120)}…"`:null;
+      return`<div class="client-card${urg>=8?' urgent':''}" onclick="openClientDrawer(${d.id})">
+        <div class="cl-name">${d.a.company_name||'Anonymous'}</div>
+        <div class="cl-role">Hiring: ${d.a.role_title||'—'}</div>
+        <div class="cl-meta">
+          <span class="tag ${urgCls}">Urgency: ${urg}/10</span>
+          ${d.a.timeline?`<span class="tag tag-blue">${d.a.timeline.split('—')[0].trim()}</span>`:''}
+          ${arvoR?`<span class="tag ${rCls}">ARVO: ${arvoR}/10</span>`:''}
+          ${envs.map(e=>`<span class="tag tag-blue">${e.split('—')[0].trim().split(' ').slice(0,3).join(' ')}</span>`).join('')}
+        </div>
+        ${quote?`<div class="cl-insight"><strong>${d.a.arvo_gap?'Feedback:':'Role:'}</strong> ${quote}</div>`:''}
+      </div>`;
+    }).join('');
+  }
+
+  const tableHtml=sorted.length?sorted.map(d=>{
+    const urg=parseInt(d.a.urgency)||0;
+    const urgCls=urg>=8?'tag-red':urg>=5?'tag-amber':'tag-blue';
+    const support=(d.a.support||'—').split('&')[0].split(' ').slice(0,4).join(' ');
+    return`<div class="t-row client-table-cols" onclick="openClientDrawer(${d.id})">
+      <span class="r-name">${d.a.company_name||'Anonymous'}</span>
+      <span class="r-muted">${d.a.role_title||'—'}</span>
+      <span><span class="tag ${urgCls}">${urg}/10</span></span>
+      <span class="r-muted">${(d.a.timeline||'—').split('—')[0].trim()}</span>
+      <span class="r-muted">${support}</span>
+      <span><button class="sec-action" onclick="event.stopPropagation();openClientDrawer(${d.id})">View</button></span>
+    </div>`;
+  }).join(''):`<div class="empty-state">No responses yet.</div>`;
+
+  document.getElementById('tab-clients').innerHTML=`
+    <div class="stats-row">
+      <div class="stat highlight"><div class="stat-num">${data.length}</div><div class="stat-label">Total responses</div></div>
+      <div class="stat"><div class="stat-num">${urgent}</div><div class="stat-label">Urgent hires</div></div>
+      <div class="stat"><div class="stat-num">${avg!=='—'?avg+'/10':'—'}</div><div class="stat-label">Avg urgency</div></div>
+      <div class="stat"><div class="stat-num" style="font-size:${topS?'18px':'42px'};padding-top:${topS?'14px':'0'}">${topS?topS[0]:'—'}</div><div class="stat-label">Top support gap</div></div>
+    </div>
+    ${insightHtml}
+    <div class="sec"><div class="sec-title">Active Clients</div><button class="sec-action" onclick="exportCSV('clients')">Export CSV ↓</button></div>
+    <div class="clients-grid">${cardsHtml}</div>
+    <div class="breakdown-row">
+      <div class="breakdown-card"><div class="bc-title">Biggest Hiring Challenge</div><div id="challenge-bars"></div></div>
+      <div class="breakdown-card"><div class="bc-title">Where ARVO Can Do More</div><div id="support-bars"></div></div>
+    </div>
+    <div class="sec"><div class="sec-title">All Clients</div></div>
+    <div class="table-wrap">
+      <div class="t-head client-table-cols"><span>Name / Company</span><span>Hiring for</span><span>Urgency</span><span>Timeline</span><span>Top need</span><span></span></div>
+      <div>${tableHtml}</div>
+    </div>`;
+
+  renderBars('challenge-bars',data,d=>(d.a.challenge||'Not answered').split(' ').slice(0,5).join(' '));
+  renderBars('support-bars',data,d=>(d.a.support||'Not answered').split('&')[0].split(' ').slice(0,4).join(' '));
+}
+
+// ── ARVO+ ─────────────────────────────────────
+function renderArvoPlus(){
+  const data=db.clients.filter(d=>d.a.wish_existed||d.a.biggest_headache);
+  const wishes=db.clients.map(d=>d.a.wish_existed).filter(Boolean);
+  const headaches=db.clients.map(d=>d.a.biggest_headache).filter(Boolean);
+  const themes={onboarding:0,retention:0,salary:0,culture:0,coaching:0,reporting:0};
+  [...wishes,...headaches].forEach(t=>{
+    const tl=t.toLowerCase();
+    if(tl.includes('onboard'))themes.onboarding++;
+    if(tl.includes('retain')||tl.includes('keep')||tl.includes('leaving')||tl.includes('turnover'))themes.retention++;
+    if(tl.includes('salary')||tl.includes('comp')||tl.includes('pay')||tl.includes('benchmark'))themes.salary++;
+    if(tl.includes('culture')||tl.includes('team'))themes.culture++;
+    if(tl.includes('coach')||tl.includes('feedback')||tl.includes('train'))themes.coaching++;
+    if(tl.includes('report')||tl.includes('update')||tl.includes('data'))themes.reporting++;
+  });
+  const topTheme=Object.entries(themes).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1])[0];
+  const uniqueThemes=Object.values(themes).filter(v=>v>0).length;
+
+  const icons=['💎','🚀','🔧','💡','🎯','🌱','📊','🤝'];
+  const wishesHtml=wishes.length?wishes.map((w,i)=>{
+    const client=db.clients.find(d=>d.a.wish_existed===w);
+    return`<div class="signal-item"><div class="signal-icon">${icons[i%icons.length]}</div><div><div class="signal-company">${client?.a?.company_name||'Client'} · ${new Date(client?.ts||Date.now()).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</div><div class="signal-text">${w}</div></div></div>`;
+  }).join(''):`<div class="empty-state">No responses yet.</div>`;
+
+  const headachesHtml=headaches.length?headaches.map((h,i)=>{
+    const client=db.clients.find(d=>d.a.biggest_headache===h);
+    return`<div class="signal-item"><div class="signal-icon">🔥</div><div><div class="signal-company">${client?.a?.company_name||'Client'} · ${new Date(client?.ts||Date.now()).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</div><div class="signal-text">${h}</div></div></div>`;
+  }).join(''):`<div class="empty-state">No headaches submitted yet.</div>`;
+
+  document.getElementById('tab-arvoplus').innerHTML=`
+    <div class="stats-row">
+      <div class="stat highlight"><div class="stat-num">${data.length}</div><div class="stat-label">Signals collected</div></div>
+      <div class="stat"><div class="stat-num">${uniqueThemes||'—'}</div><div class="stat-label">Unique themes</div></div>
+      <div class="stat"><div class="stat-num" style="font-size:22px;padding-top:12px;">${topTheme?topTheme[0].charAt(0).toUpperCase()+topTheme[0].slice(1):'—'}</div><div class="stat-label">Most requested</div></div>
+      <div class="stat"><div class="stat-num">${wishes.length}</div><div class="stat-label">Wish existed</div></div>
+    </div>
+    <div class="sec"><div class="sec-title">What clients wish existed</div></div>
+    <div class="signal-board">
+      <div class="signal-board-title">💎 ARVO+ Opportunity Board</div>
+      <div class="signal-board-sub">Every response below is a direct request from a client for something ARVO doesn't currently offer. This is your product roadmap.</div>
+      <div class="signals-list">${wishesHtml}</div>
+    </div>
+    <div class="sec"><div class="sec-title">Biggest people & hiring headaches</div></div>
+    <div class="signal-board" style="border-color:var(--amber-bg);">
+      <div class="signal-board-title">🔥 Pain Points Board</div>
+      <div class="signal-board-sub">Problems clients are experiencing right now — outside of the current placement. Each one is a door into a deeper conversation.</div>
+      <div class="signals-list">${headachesHtml}</div>
+    </div>`;
+}
+
+// ── BARS ──────────────────────────────────────
+function renderBars(elId,data,extractor){
+  const counts={};
+  data.forEach(d=>{const k=extractor(d);if(k&&k!=='Not answered'&&k!=='Unknown')counts[k]=(counts[k]||0)+1;});
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const max=sorted[0]?.[1]||1;
+  const el=document.getElementById(elId);
+  if(!el)return;
+  if(!sorted.length){el.innerHTML=`<div style="font-size:13px;color:var(--sub);font-style:italic;padding:8px 0;">No data yet.</div>`;return;}
+  el.innerHTML=sorted.map(([label,count])=>`
+    <div class="bar-item">
+      <div class="bar-label">${label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(count/max*100)}%"></div></div>
+      <div class="bar-count">${count}</div>
+    </div>`).join('');
+}
+
+// ── DRAWERS ───────────────────────────────────
+const CQ_LABELS={current_role:'Current role',readiness:'Readiness',real_move_driver:'What would make them move',move_blocker:'What would stop them',env_experience:'Environment experience',pressure_response:'Response to key pressure',nonneg_proof:'Non-negotiable proof',decision_style:'Decision-making style',feedback_style:'Feedback style',transition_readiness:'Ramp-up plan',growth_vision:'Growth vision',extra:'Anything else'};
+const CQ_SECTIONS={current_role:'About You',readiness:'About You',real_move_driver:'What Would Make You Move',move_blocker:'What Would Make You Move',env_experience:'Role-Specific',pressure_response:'Role-Specific',nonneg_proof:'Role-Specific',decision_style:'How You Work',feedback_style:'How You Work',transition_readiness:'Role-Specific',growth_vision:'Where You Want to Go',extra:'Anything Else'};
+const CLQ_LABELS={role_title:'Role title',role_in_one:'Role in one sentence',environment:'Environment',breakers:'What breaks a bad hire',non_negotiable:'Non-negotiable',nice_to_have:'Nice to haves',red_flags:'Red flags',timeline:'Timeline',salary_range:'Salary range',arvo_rating:'ARVO rating',arvo_best:'What ARVO does best',arvo_gap:'Where ARVO falls short',wish_existed:'What they wish existed',biggest_headache:'Biggest people headache'};
+
+function openCandDrawer(id){
+  const d=db.candidates.find(x=>x.id===id);if(!d)return;
+  const s=scoreCandidate(d);
+  document.getElementById('d-type').textContent='Candidate Alignment';
+  document.getElementById('d-name').textContent=d.a.name||'Anonymous';
+  document.getElementById('d-sub').textContent=d.a.current_role||d.role||'';
+  document.getElementById('d-date').textContent='Submitted '+new Date(d.ts).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const scoreRow=document.getElementById('d-score-row');
+  scoreRow.style.display='flex';
+  const ring=document.getElementById('d-score-ring');
+  ring.textContent=s.score;ring.className=`score-ring ${scoreClass(s.score)}`;
+  document.getElementById('d-score-val').textContent=s.score+'%';
+  document.getElementById('d-score-why').textContent=[...s.reasons.map(r=>'✓ '+r),...s.flags.map(f=>'⚠ '+f)].join('  ·  ');
+  const rt=readinessTag(d.a.readiness);
+  document.getElementById('d-tags').innerHTML=[`<span class="tag ${rt.cls}">${rt.text}</span>`,...s.reasons.map(r=>`<span class="tag tag-blue">${r}</span>`),...s.flags.map(f=>`<span class="tag tag-amber">⚠ ${f}</span>`)].join('');
+  let lastSec='';
+  document.getElementById('d-qa').innerHTML=Object.entries(CQ_LABELS).filter(([k])=>d.a[k]).map(([k,label])=>{
+    const sec=CQ_SECTIONS[k];let secHead='';
+    if(sec!==lastSec){secHead=`<div class="qa-section-head">${sec}</div>`;lastSec=sec;}
+    return`${secHead}<div><div class="qa-q">${label}</div><div class="qa-a">${d.a[k]}</div></div>`;
+  }).join('');
+  document.getElementById('overlay').classList.add('open');
+}
+
+function openClientDrawer(id){
+  const d=db.clients.find(x=>x.id===id);if(!d)return;
+  document.getElementById('d-type').textContent='Client Alignment';
+  document.getElementById('d-name').textContent=d.a.company_name||'Anonymous';
+  document.getElementById('d-sub').textContent=d.a.role_title?`Hiring: ${d.a.role_title}`:'';
+  document.getElementById('d-date').textContent='Submitted '+new Date(d.ts).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('d-score-row').style.display='none';
+  const urg=parseInt(d.a.urgency||0),arvoR=parseInt(d.a.arvo_rating||0);
+  const urgCls=urg>=8?'tag-red':urg>=5?'tag-amber':'tag-blue';
+  const rCls=arvoR>=8?'tag-green':arvoR>=5?'tag-amber':arvoR>0?'tag-red':'tag-blue';
+  document.getElementById('d-tags').innerHTML=[urg?`<span class="tag ${urgCls}">Urgency ${urg}/10</span>`:'',arvoR?`<span class="tag ${rCls}">ARVO ${arvoR}/10</span>`:'',d.a.timeline?`<span class="tag tag-blue">${d.a.timeline.split('—')[0].trim()}</span>`:''].filter(Boolean).join('');
+  document.getElementById('d-qa').innerHTML=Object.entries(CLQ_LABELS).filter(([k])=>d.a[k]).map(([k,label])=>{
+    let val=d.a[k];
+    if(k==='environment'&&val)val=val.split('||').map(v=>'• '+v).join('\n');
+    return`<div><div class="qa-q">${label}</div><div class="qa-a" style="white-space:pre-line;">${val}</div></div>`;
+  }).join('');
+  document.getElementById('overlay').classList.add('open');
+}
+
+function maybeClose(e){if(e.target===document.getElementById('overlay'))closeDrawer();}
+function closeDrawer(){document.getElementById('overlay').classList.remove('open');}
+
+// ── CSV ────────────────────────────────────────
+function exportCSV(type){
+  const data=db[type];if(!data.length)return;
+  const keys=type==='candidates'?['name','current_role','readiness','real_move_driver','move_blocker','env_experience','nonneg_proof','decision_style','feedback_style','transition_readiness','growth_vision','extra']:['company_name','role_title','role_in_one','urgency','timeline','salary_range','breakers','non_negotiable','red_flags','arvo_rating','arvo_best','arvo_gap','wish_existed','biggest_headache'];
+  const headers=['Date','Score (candidates)',...keys];
+  const rows=data.map(d=>{
+    const score=type==='candidates'?scoreCandidate(d).score:'';
+    return[new Date(d.ts).toLocaleDateString('en-GB'),score,...keys.map(k=>`"${(d.a[k]||'').toString().replace(/"/g,'""')}"`)]
+  });
+  const csv=[headers.join(','),...rows.map(r=>r.join(','))].join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=`arvo-${type}-${Date.now()}.csv`;a.click();
+}
+</script>
+</body>
+</html>
